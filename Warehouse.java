@@ -1,3 +1,5 @@
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
@@ -29,5 +31,9 @@ public class Warehouse {
         } finally {
             itemLock.unlock();
         }
+    }
+
+    public Map<String, Integer> getInventory() {
+        return new HashMap<>(inventory);
     }
 }

@@ -20,7 +20,11 @@ public class Main {
 
         // Start Traders
         for (int i = 0; i < numTraders; i++) {
-            startProcess("Trader", String.valueOf(i), "localhost", "8000", String.valueOf(8001 + i), cacheMode);
+            if("NO_CACHE".equals(cacheMode)){
+                startProcess("Trader", String.valueOf(i), "localhost", "8000", String.valueOf(8001 + i), cacheMode);
+            }else if("WITH_CACHE".equals(cacheMode)){
+                startProcess("CachingTrader", String.valueOf(i), "localhost", "8000", String.valueOf(8001 + i), cacheMode);
+            }
         }
 
         // Start Peers (Buyers and Sellers)

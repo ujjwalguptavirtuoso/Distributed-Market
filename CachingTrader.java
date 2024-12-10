@@ -9,7 +9,6 @@ public class CachingTrader {
     private String warehouseHost;
     private int warehousePort;
     private ServerSocket serverSocket;
-    private Warehouse warehouse;
     private ConcurrentHashMap<String, Integer> cache = new ConcurrentHashMap<>();
     private Lock cacheLock = new ReentrantLock();
     private long lastSyncTime;
@@ -21,13 +20,12 @@ public class CachingTrader {
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private int heartbeatTimeout = 5000; // 5 seconds timeout for heartbeat response
 
-    public CachingTrader(int id, String warehouseHost, int warehousePort, int traderPort, List<Integer> traderPorts, Warehouse warehouse) throws IOException {
+    public CachingTrader(int id, String warehouseHost, int warehousePort, int traderPort, List<Integer> traderPorts) throws IOException {
         this.id = id;
         this.warehouseHost = warehouseHost;
         this.warehousePort = warehousePort;
         this.serverSocket = new ServerSocket(traderPort);
         this.traderPorts = traderPorts;
-        this.warehouse = warehouse;
         this.lastSyncTime = System.currentTimeMillis();
         System.out.println("Trader " + id + " started on port " + traderPort);
         periodicSync();
@@ -51,23 +49,32 @@ public class CachingTrader {
                 ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream())
         ) {
             String command = (String) in.readObject();
-            String[] parts = command.split(",");
-            String action = parts[0];
-            String item = parts[1];
 
-            boolean success = false;
-            if (action.equals("BUY")) {
-                success = buyItem(item);
-            } else if (action.equals("SELL")) {
-                sellItem(item);
+            // Check if the message is the heartbeat message
+            if ("ARE_YOU_THERE?".equals(command)) {
+                // Respond with "I'M_ALIVE" for heartbeat
+                out.writeObject("I'M_ALIVE");
+            } else {
+                // Process BUY and SELL actions
+                String[] parts = command.split(",");
+                String action = parts[0];
+                String item = parts[1];
+
+                boolean success = false;
+                if (action.equals("BUY")) {
+                    success = buyItem(item);
+                } else if (action.equals("SELL")) {
+                    success = sellItem(item);
+                }
+                // Send the success status back to the client
+                out.writeBoolean(success);
             }
-            out.writeBoolean(success);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    //Using cache to perform buys
+    // Using cache to perform buys
     public boolean buyItem(String item) {
         cacheLock.lock();
         try {
@@ -96,21 +103,56 @@ public class CachingTrader {
         }
     }
 
+    // Synchronize cache with warehouse via socket communication
     public void synchronizeCache() {
         cacheLock.lock();
         try {
-            // Fetch inventory from the warehouse
-            Map<String, Integer> warehouseInventory = warehouse.getInventory();
+            // Fetch inventory from the warehouse via socket communication
+            Map<String, Integer> warehouseInventory = getInventoryFromWarehouse();
+
             // Merge with local cache
             for (Map.Entry<String, Integer> entry : warehouseInventory.entrySet()) {
                 cache.put(entry.getKey(), entry.getValue());
             }
+
             // Clear the ledger after sync
             ledger.clear();
             lastSyncTime = System.currentTimeMillis();
         } finally {
             cacheLock.unlock();
         }
+    }
+
+    private Map<String, Integer> getInventoryFromWarehouse() {
+        Map<String, Integer> inventory = new HashMap<>();
+
+        try (Socket socket = new Socket(warehouseHost, warehousePort);
+             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+             ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+
+            // Send request for inventory data
+            out.writeObject("GET_INVENTORY");
+
+            // Receive the inventory string from the warehouse
+            String inventoryString = (String) in.readObject();
+            inventory = stringToMap(inventoryString);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return inventory;
+    }
+
+    private Map<String, Integer> stringToMap(String str) {
+        Map<String, Integer> map = new HashMap<>();
+        String[] entries = str.split(",");
+        for (String entry : entries) {
+            if (!entry.isEmpty()) {
+                String[] keyValue = entry.split(":");
+                map.put(keyValue[0], Integer.parseInt(keyValue[1]));
+            }
+        }
+        return map;
     }
 
     public void periodicSync() {
@@ -136,6 +178,7 @@ public class CachingTrader {
                  ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
                 // Send heartbeat message
+                System.out.println("Sending heartbeat to trader at port " + traderPort);
                 out.writeObject("ARE_YOU_THERE?");
 
                 // Wait for response from the other trader
@@ -166,11 +209,40 @@ public class CachingTrader {
         }
     }
 
-
     // If another trader fails, the current trader takes over the responsibilities
     private void takeOverResponsibilities() {
         // Notify peers that this trader is now the active trader
         // This could be a network call to inform all connected clients
         System.out.println("Now I am the active trader.");
+    }
+
+    public static void main(String[] args) {
+        // Check if the correct number of arguments is passed
+        if (args.length < 5) {
+            System.out.println("Usage: java CachingTrader <id> <warehouseHost> <warehousePort> <traderPort> <traderAddresses>");
+            System.exit(1);
+        }
+
+        // Parse arguments
+        int id = Integer.parseInt(args[0]);
+        String warehouseHost = args[1];
+        int warehousePort = Integer.parseInt(args[2]);
+        int traderPort = Integer.parseInt(args[3]);
+
+        // Parse the list of trader addresses
+        List<Integer> traderPorts = new ArrayList<>();
+        String[] traderAddressesArray = args[4].split(",");
+        for (String address : traderAddressesArray) {
+            String[] parts = address.split(":");
+            traderPorts.add(Integer.parseInt(parts[1]));
+        }
+
+        try {
+            // Create the CachingTrader instance and start it
+            CachingTrader cachingTrader = new CachingTrader(id, warehouseHost, warehousePort, traderPort, traderPorts);
+            cachingTrader.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

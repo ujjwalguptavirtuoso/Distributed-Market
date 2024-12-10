@@ -1,0 +1,53 @@
+Trader 1 started on port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8001
+Sending heartbeat to trader at port 8002
+Sending heartbeat to trader at port 8002
+Failed to connect to trader on port 8001
+Trader on port 8001 is assumed to have failed. Taking over responsibilities.
+Now I am the active trader.

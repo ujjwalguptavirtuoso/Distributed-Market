@@ -23,19 +23,25 @@ public class Main {
             if("NO_CACHE".equals(cacheMode)){
                 startProcess("Trader", String.valueOf(i), "localhost", "8000", String.valueOf(8001 + i));
             }else if("WITH_CACHE".equals(cacheMode)){
-                startProcess("CachingTrader", String.valueOf(i), "localh8000", String.valueOf(8001 + i), cacheMode);
+                List<String> traderAddresses = getTradersList(numTraders);
+                startProcess("CachingTrader", String.valueOf(i), "localhost", "8000", String.valueOf(8001 + i), String.join(",", traderAddresses));
             }
         }
 
         // Start Peers (Buyers and Sellers)
         for (int i = 0; i < numPeers; i++) {
             String type = (i % 2 == 0) ? "BUYER" : "SELLER";
-            List<String> traderAddresses = new ArrayList<>();
-            for (int j = 0; j < numTraders; j++) {
-                traderAddresses.add("localhost:" + (8001 + j));
-            }
+            List<String> traderAddresses = getTradersList(numTraders);
             startProcess("Peer", String.valueOf(i), type, String.join(",", traderAddresses));
         }
+    }
+
+    private static List<String> getTradersList(int numTraders){
+        List<String> traderAddresses = new ArrayList<>();
+        for (int j = 0; j < numTraders; j++) {
+            traderAddresses.add("localhost:" + (8001 + j));
+        }
+        return traderAddresses;
     }
 
     private static void startProcess(String className, String... args) throws IOException {

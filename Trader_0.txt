@@ -1,0 +1,1 @@
+Trader 0 started on port 8001

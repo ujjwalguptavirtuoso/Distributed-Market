@@ -27,7 +27,6 @@ public class Warehouse {
             }
         }
     }
-
     private void handleClient(Socket clientSocket) {
         try (
             ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
@@ -46,11 +45,19 @@ public class Warehouse {
                 out.writeBoolean(true);
             } else if (action.equals("GET_INVENTORY")) {
                 Map<String, Integer> inventory = getInventory();
-                out.writeObject(inventory);
+                out.writeObject(mapToString(inventory));
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    private String mapToString(Map<String, Integer> map) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, Integer> entry : map.entrySet()) {
+            sb.append(entry.getKey()).append(":").append(entry.getValue()).append(",");
+        }
+        return sb.toString();
     }
     private ConcurrentHashMap<String, Lock> itemLocks = new ConcurrentHashMap<>();
 

@@ -1,0 +1,4 @@
+Salt,96
+Mead,97
+Boar,145
+Fish,87

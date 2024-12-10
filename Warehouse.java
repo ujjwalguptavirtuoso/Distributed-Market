@@ -98,6 +98,11 @@ public class Warehouse {
     private void writeItemCount(String item, int count) {
         try {
             File inputFile = new File(INVENTORY_FILE);
+            // Check if the inventory file exists, create it if it doesn't
+            if (!inputFile.exists()) {
+                inputFile.createNewFile();
+            }
+
             File tempFile = new File("temp_inventory.txt");
 
             BufferedReader reader = new BufferedReader(new FileReader(inputFile));
@@ -153,4 +158,19 @@ public class Warehouse {
     }
     return inventory;
 }
+
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.out.println("Usage: java Warehouse <port>");
+            System.exit(1);
+        }
+
+        int port = Integer.parseInt(args[0]);
+        try {
+            Warehouse warehouse = new Warehouse(port);
+            warehouse.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

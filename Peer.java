@@ -18,6 +18,7 @@ public class Peer {
         this.traderAddresses = traderAddresses;
         this.currentTraderIndex = 0;
         this.executor = Executors.newScheduledThreadPool(1);
+        System.out.println("Peer " + id + " started");
     }
 
     public void start() {
@@ -45,10 +46,14 @@ public class Peer {
 
     private void sellItem(String item) {
         String traderAddress = getRandomTraderAddress();
-        try (Socket socket = new Socket(traderAddress, 8080);
+        String[] addressParts = traderAddress.split(":");
+        String host = addressParts[0];
+        int port = Integer.parseInt(addressParts[1]);
+
+        try (Socket socket = new Socket(host, port);
              ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-            
+
             out.writeObject("SELL," + item);
             boolean success = in.readBoolean();
             System.out.println("Seller " + id + " " + (success ? "sold" : "failed to sell") + " " + item);
@@ -60,10 +65,14 @@ public class Peer {
     private void buyRandomItem() {
         String item = generateRandomItem();
         String traderAddress = getRandomTraderAddress();
-        try (Socket socket = new Socket(traderAddress, 8080);
+        String[] addressParts = traderAddress.split(":");
+        String host = addressParts[0];
+        int port = Integer.parseInt(addressParts[1]);
+
+        try (Socket socket = new Socket(host, port);
              ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
-            
+
             out.writeObject("BUY," + item);
             boolean success = in.readBoolean();
             System.out.println("Buyer " + id + " " + (success ? "bought" : "failed to buy") + " " + item);
@@ -85,4 +94,24 @@ public class Peer {
     public void shutdown() {
         executor.shutdown();
     }
+
+    public static void main(String[] args) {
+        if (args.length != 3) {
+            System.out.println("Usage: java Peer <id> <type> <traderAddresses>");
+            System.exit(1);
+        }
+
+        int id = Integer.parseInt(args[0]);
+        String type = args[1];
+        List<String> traderAddresses = Arrays.asList(args[2].split(","));
+
+        Peer peer = new Peer(id, type, traderAddresses);
+        peer.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutting down Peer " + id);
+            peer.shutdown();
+        }));
+    }
+
 }

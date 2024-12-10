@@ -72,4 +72,26 @@ public class Trader {
             return false;
         }
     }
+
+    public static void main(String[] args) {
+        // Check if the correct number of arguments is passed
+        if (args.length != 4) {
+            System.out.println("Usage: java Trader <id> <warehouseHost> <warehousePort> <traderPort>");
+            System.exit(1);
+        }
+
+        // Parse arguments
+        int id = Integer.parseInt(args[0]);
+        String warehouseHost = args[1];
+        int warehousePort = Integer.parseInt(args[2]);
+        int traderPort = Integer.parseInt(args[3]);
+
+        try {
+            // Create Trader instance and start it
+            Trader trader = new Trader(id, warehouseHost, warehousePort, traderPort);
+            trader.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

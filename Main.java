@@ -21,9 +21,9 @@ public class Main {
         // Start Traders
         for (int i = 0; i < numTraders; i++) {
             if("NO_CACHE".equals(cacheMode)){
-                startProcess("Trader", String.valueOf(i), "localhost", "8000", String.valueOf(8001 + i), cacheMode);
+                startProcess("Trader", String.valueOf(i), "localhost", "8000", String.valueOf(8001 + i));
             }else if("WITH_CACHE".equals(cacheMode)){
-                startProcess("CachingTrader", String.valueOf(i), "localhost", "8000", String.valueOf(8001 + i), cacheMode);
+                startProcess("CachingTrader", String.valueOf(i), "localh8000", String.valueOf(8001 + i), cacheMode);
             }
         }
 
@@ -41,6 +41,8 @@ public class Main {
     private static void startProcess(String className, String... args) throws IOException {
         List<String> command = new ArrayList<>();
         command.add("java");
+        command.add("-cp");
+        command.add(".");  // Ensure the current directory is in the classpath
         command.add(className);
         command.addAll(Arrays.asList(args));
 

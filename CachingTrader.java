@@ -108,11 +108,15 @@ public class CachingTrader {
         cacheLock.lock();
         try {
             // Fetch inventory from the warehouse via socket communication
-            Map<String, Integer> warehouseInventory = getInventoryFromWarehouse();
+            String warehouseInventory = getInventoryFromWarehouse();
 
             // Merge with local cache
-            for (Map.Entry<String, Integer> entry : warehouseInventory.entrySet()) {
-                cache.put(entry.getKey(), entry.getValue());
+            String[] items = warehouseInventory.split(";");
+            for (String item : items) {
+                String[] parts = item.split(",");
+                if (parts.length == 2) {
+                    cache.put(parts[0], Integer.parseInt(parts[1]));
+                }
             }
 
             // Clear the ledger after sync
@@ -123,8 +127,8 @@ public class CachingTrader {
         }
     }
 
-    private Map<String, Integer> getInventoryFromWarehouse() {
-        Map<String, Integer> inventory = new HashMap<>();
+    private String getInventoryFromWarehouse() {
+        String inventory = "";
 
         try (Socket socket = new Socket(warehouseHost, warehousePort);
              ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
@@ -134,8 +138,7 @@ public class CachingTrader {
             out.writeObject("GET_INVENTORY");
 
             // Receive the inventory string from the warehouse
-            String inventoryString = (String) in.readObject();
-            inventory = stringToMap(inventoryString);
+            inventory = (String) in.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }

@@ -27,25 +27,30 @@ public class Warehouse {
             }
         }
     }
+
+
     private void handleClient(Socket clientSocket) {
         try (
-            ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-            ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream())
+                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream())
         ) {
             String command = (String) in.readObject();
-            String[] parts = command.split(",");
-            String action = parts[0];
-            String item = parts[1];
+            if ("GET_INVENTORY".equals(command)) {
+                String inventory = getInventoryAsString();
+                out.writeObject(inventory);
+            } else {
+                String[] parts = command.split(",");
+                String action = parts[0];
+                String item = parts[1];
 
-            if (action.equals("BUY")) {
-                boolean success = buyItem(item);
+                boolean success = false;
+                if ("BUY".equals(action)) {
+                    success = buyItem(item);
+                } else if ("SELL".equals(action)) {
+                    sellItem(item);
+                    success = true;
+                }
                 out.writeBoolean(success);
-            } else if (action.equals("SELL")) {
-                sellItem(item);
-                out.writeBoolean(true);
-            } else if (action.equals("GET_INVENTORY")) {
-                Map<String, Integer> inventory = getInventory();
-                out.writeObject(mapToString(inventory));
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -148,23 +153,18 @@ public class Warehouse {
         }
     }
 
-    public synchronized Map<String, Integer> getInventory() {
-    Map<String, Integer> inventory = new HashMap<>();
-    try (BufferedReader reader = new BufferedReader(new FileReader(INVENTORY_FILE))) {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            String[] parts = line.split(",");
-            if (parts.length == 2) {
-                String item = parts[0];
-                int count = Integer.parseInt(parts[1]);
-                inventory.put(item, count);
+    private String getInventoryAsString() {
+        StringBuilder inventory = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(INVENTORY_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                inventory.append(line).append(";");
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    } catch (IOException e) {
-        e.printStackTrace();
+        return inventory.toString();
     }
-    return inventory;
-}
 
     public static void main(String[] args) {
         if (args.length != 1) {
